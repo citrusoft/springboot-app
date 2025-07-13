@@ -4,13 +4,13 @@ pipeline {
     }
     agent any
     environment {
-        registry = "567207295412.dkr.ecr.us-east-2.amazonaws.com/coachak/my-docker-repo"
+        registry = "567207295412.dkr.ecr.us-east-2.amazonaws.com/my-docker-repo"
     }
    
     stages {
         stage('Cloning Git') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/akannan1087/springboot-app']]])     
+                checkout([$class: 'GitSCM', branches: [[name: '*/setup-567207295412']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/citrusoft/springboot-app.git']]])     
             }
         }
       stage ('Build') {
@@ -33,7 +33,7 @@ pipeline {
      steps{  
          script {
                 sh 'aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 567207295412.dkr.ecr.us-east-2.amazonaws.com'
-                sh 'docker push 567207295412.dkr.ecr.us-east-2.amazonaws.com/coachak/my-docker-repo:$BUILD_NUMBER'
+                sh 'docker push 567207295412.dkr.ecr.us-east-2.amazonaws.com/my-docker-repo:$BUILD_NUMBER'
          }
         }
       }
@@ -45,7 +45,7 @@ pipeline {
                 echo "Current build number is: ${env.BUILD_ID}"
                // Replace the placeholders in the deployment YAML file 
                 sh """ 
-                sed -i 's/\${BUILD_NUMBER}/${env.BUILD_ID}/g' eks-deploy-k8s.yaml
+                sed -i '' -e "s/latest/${env.BUILD_ID}/g" eks-deploy-k8s.yaml
                 """ 
                 sh ('kubectl apply -f  eks-deploy-k8s.yaml -n springboot-app-ns')
                 }
